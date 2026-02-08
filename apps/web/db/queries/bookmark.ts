@@ -7,6 +7,7 @@ import { bookmarkTag, tag } from "@/db/schema/tag"
 export async function getBookmarksByUserId({
   userId,
   type,
+  platform,
   folderId,
   search,
   limit = 20,
@@ -14,6 +15,7 @@ export async function getBookmarksByUserId({
 }: {
   userId: string
   type?: string
+  platform?: string
   folderId?: string
   search?: string
   limit?: number
@@ -23,6 +25,10 @@ export async function getBookmarksByUserId({
 
   if (type && type !== "all") {
     conditions.push(eq(bookmark.type, type))
+  }
+
+  if (platform && platform !== "all") {
+    conditions.push(eq(bookmark.platform, platform))
   }
 
   if (folderId) {
@@ -104,7 +110,7 @@ export async function getBookmarkById({ id, userId }: { id: string; userId: stri
   return result[0] ?? null
 }
 
-export async function getBookmarkTags(bookmarkId: string) {
+export function getBookmarkTags(bookmarkId: string) {
   return db
     .select({ id: tag.id, name: tag.name, color: tag.color })
     .from(bookmarkTag)

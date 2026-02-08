@@ -16,7 +16,7 @@ import { useT } from "@/lib/i18n"
 import type { SearchMatchReason, SearchMode } from "@/lib/search/types"
 import { useSearchDialog } from "./search-dialog-provider"
 
-type SearchResult = {
+interface SearchResult {
   id: string
   title: string
   description: string | null
@@ -64,7 +64,9 @@ export function GlobalSearchDialog() {
   }, [open])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
 
     if (!query) {
       setResults([])
@@ -255,11 +257,21 @@ export function GlobalSearchDialog() {
 }
 
 function getReasonLabel(reason: SearchMatchReason, t: ReturnType<typeof useT>) {
-  if (reason === "title") return t.searchDialog.reasonTitle
-  if (reason === "description") return t.searchDialog.reasonDescription
-  if (reason === "content") return t.searchDialog.reasonContent
-  if (reason === "url") return t.searchDialog.reasonUrl
-  if (reason === "tag") return t.searchDialog.reasonTag
+  if (reason === "title") {
+    return t.searchDialog.reasonTitle
+  }
+  if (reason === "description") {
+    return t.searchDialog.reasonDescription
+  }
+  if (reason === "content") {
+    return t.searchDialog.reasonContent
+  }
+  if (reason === "url") {
+    return t.searchDialog.reasonUrl
+  }
+  if (reason === "tag") {
+    return t.searchDialog.reasonTag
+  }
   return t.searchDialog.reasonSemantic
 }
 
@@ -273,6 +285,8 @@ function getDomain(url: string) {
 
 function formatDate(value: string) {
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ""
+  if (Number.isNaN(date.getTime())) {
+    return ""
+  }
   return date.toLocaleDateString("zh-CN")
 }

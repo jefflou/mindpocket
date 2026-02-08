@@ -81,7 +81,9 @@ export const PLATFORM_PATTERNS: Array<{ pattern: RegExp; platform: string }> = [
 
 export function inferPlatform(url: string): string | null {
   for (const { pattern, platform } of PLATFORM_PATTERNS) {
-    if (pattern.test(url)) return platform
+    if (pattern.test(url)) {
+      return platform
+    }
   }
   return null
 }

@@ -32,6 +32,7 @@ export async function GET(request: Request) {
       ingestStatus: bookmark.ingestStatus,
       ingestError: bookmark.ingestError,
       url: bookmark.url,
+      platform: bookmark.platform,
       createdAt: bookmark.createdAt,
     })
     .from(bookmark)

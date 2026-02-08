@@ -14,6 +14,7 @@ import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { hasPlatformIcon, PlatformIcon } from "@/components/icons/platform-icons"
 import { Badge } from "@/components/ui/badge"
 import {
   Breadcrumb,
@@ -37,11 +38,13 @@ interface HistoryItem {
   ingestStatus: string
   ingestError: string | null
   url: string | null
+  platform: string | null
   createdAt: string
 }
 
 type StatusFilter = "all" | "pending" | "processing" | "completed" | "failed"
 const MAX_URL_PREVIEW_LENGTH = 90
+const WWW_PREFIX_REGEX = /^www\./
 
 function getSourceLabel(item: HistoryItem, t: ReturnType<typeof useT>) {
   if (item.sourceType === "file") {
@@ -55,7 +58,7 @@ function getSourceLabel(item: HistoryItem, t: ReturnType<typeof useT>) {
   if (item.url) {
     try {
       const { hostname } = new URL(item.url)
-      return hostname.replace(/^www\./, "") || t.ingest.sourceUrl
+      return hostname.replace(WWW_PREFIX_REGEX, "") || t.ingest.sourceUrl
     } catch {
       return t.ingest.sourceUrl
     }
@@ -462,19 +465,23 @@ function HistoryRow({ item, t }: { item: HistoryItem; t: ReturnType<typeof useT>
 
   return (
     <div className="flex items-center gap-3 overflow-hidden rounded-lg border p-3">
+      {hasPlatformIcon(item.platform) ? (
+        <PlatformIcon platform={item.platform!} />
+      ) : (
+        <Globe className="size-3.5 shrink-0 text-muted-foreground" />
+      )}
       <div className="min-w-0 flex-1 overflow-hidden">
         {item.ingestStatus === "completed" ? (
-          <Link className="block truncate font-medium text-sm hover:underline" href={`/bookmark/${item.id}`}>
+          <Link
+            className="block truncate font-medium text-sm hover:underline"
+            href={`/bookmark/${item.id}`}
+          >
             {item.title}
           </Link>
         ) : (
           <p className="truncate font-medium text-sm">{item.title}</p>
         )}
-        {urlPreview && (
-          <p className="truncate text-muted-foreground text-xs">
-            {urlPreview}
-          </p>
-        )}
+        {urlPreview && <p className="truncate text-muted-foreground text-xs">{urlPreview}</p>}
         {item.ingestError && (
           <p className="mt-1 line-clamp-2 break-all text-destructive text-xs">{item.ingestError}</p>
         )}

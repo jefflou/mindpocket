@@ -1,5 +1,4 @@
 import type { SVGProps } from "react"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 type IconProps = SVGProps<SVGSVGElement>
 
@@ -245,12 +244,31 @@ export function PlatformIcon({ platform, className }: { platform: string; classN
 
   const Icon = config.icon
 
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Icon className={className ?? `size-3.5 shrink-0 ${config.color}`} />
-      </TooltipTrigger>
-      <TooltipContent>{config.label}</TooltipContent>
-    </Tooltip>
-  )
+  return <Icon className={className ?? `size-3.5 shrink-0 ${config.color}`} />
+}
+
+const PLATFORM_PATTERNS: Array<{ pattern: RegExp; platform: string }> = [
+  { pattern: /mp\.weixin\.qq\.com/, platform: "wechat" },
+  { pattern: /youtube\.com|youtu\.be/, platform: "youtube" },
+  { pattern: /github\.com/, platform: "github" },
+  { pattern: /zhihu\.com/, platform: "zhihu" },
+  { pattern: /bilibili\.com/, platform: "bilibili" },
+  { pattern: /xiaohongshu\.com|xhslink\.com/, platform: "xiaohongshu" },
+  { pattern: /twitter\.com|x\.com/, platform: "twitter" },
+  { pattern: /medium\.com/, platform: "medium" },
+  { pattern: /reddit\.com/, platform: "reddit" },
+  { pattern: /stackoverflow\.com/, platform: "stackoverflow" },
+  { pattern: /juejin\.cn/, platform: "juejin" },
+  { pattern: /jianshu\.com/, platform: "jianshu" },
+  { pattern: /notion\.so/, platform: "notion" },
+  { pattern: /arxiv\.org/, platform: "arxiv" },
+]
+
+export function detectPlatform(url: string): string | null {
+  for (const { pattern, platform } of PLATFORM_PATTERNS) {
+    if (pattern.test(url)) {
+      return platform
+    }
+  }
+  return null
 }

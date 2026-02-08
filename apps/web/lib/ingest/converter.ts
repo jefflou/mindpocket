@@ -3,6 +3,7 @@ import type { BookmarkType } from "./types"
 import { EXTENSION_TYPE_MAP, URL_TYPE_PATTERNS } from "./types"
 
 let markitdownInstance: MarkItDown | null = null
+const PARAGRAPH_SPLIT_REGEX = /\n\n/
 
 function getMarkItDown(): MarkItDown {
   if (!markitdownInstance) {
@@ -14,14 +15,18 @@ function getMarkItDown(): MarkItDown {
 export async function convertUrl(url: string) {
   const md = getMarkItDown()
   const result = await md.convert(url)
-  if (!result) return null
+  if (!result) {
+    return null
+  }
   return { title: result.title, markdown: result.markdown }
 }
 
 export async function convertBuffer(buffer: Buffer, fileExtension: string) {
   const md = getMarkItDown()
   const result = await md.convertBuffer(buffer, { file_extension: fileExtension })
-  if (!result) return null
+  if (!result) {
+    return null
+  }
   return { title: result.title, markdown: result.markdown }
 }
 
@@ -31,7 +36,9 @@ export async function convertHtml(html: string, sourceUrl: string) {
     headers: { "content-type": "text/html; charset=utf-8" },
   })
   const result = await md.convert(response, { url: sourceUrl })
-  if (!result) return null
+  if (!result) {
+    return null
+  }
   return { title: result.title, markdown: result.markdown }
 }
 
@@ -41,7 +48,9 @@ export function inferTypeFromExtension(ext: string): BookmarkType {
 
 export function inferTypeFromUrl(url: string): BookmarkType {
   for (const { pattern, type } of URL_TYPE_PATTERNS) {
-    if (pattern.test(url)) return type
+    if (pattern.test(url)) {
+      return type
+    }
   }
   return "link"
 }
@@ -53,6 +62,6 @@ export function extractDescription(markdown: string): string {
     .replace(/\[([^\]]+)\]\(.*?\)/g, "$1")
     .replace(/[*_~`#>|-]/g, "")
     .trim()
-  const firstParagraph = text.split(/\n\n/)[0] ?? ""
+  const firstParagraph = text.split(PARAGRAPH_SPLIT_REGEX)[0] ?? ""
   return firstParagraph.slice(0, 200).trim()
 }

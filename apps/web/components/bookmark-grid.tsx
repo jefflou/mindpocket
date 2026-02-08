@@ -4,7 +4,7 @@ import { FileText, Grid3X3, Image, LayoutList, Link2, Loader2, Package, Video } 
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 import { BookmarkCard, type BookmarkItem } from "@/components/bookmark-card"
-import { hasPlatformIcon, PlatformIcon } from "@/components/icons/platform-icons"
+import { hasPlatformIcon, PLATFORM_CONFIG, PlatformIcon } from "@/components/icons/platform-icons"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -17,7 +17,32 @@ const typeFilters = [
   { value: "image", label: "图片", icon: Image },
 ] as const
 
+const platformFilters = [
+  { value: "all", label: "全部" },
+  { value: "wechat", label: "微信" },
+  { value: "xiaohongshu", label: "小红书" },
+  { value: "bilibili", label: "哔哩哔哩" },
+] as const
+
 type ViewMode = "grid" | "list"
+const LIST_SKELETON_KEYS = [
+  "list-skeleton-1",
+  "list-skeleton-2",
+  "list-skeleton-3",
+  "list-skeleton-4",
+  "list-skeleton-5",
+  "list-skeleton-6",
+]
+const GRID_SKELETON_KEYS = [
+  "grid-skeleton-1",
+  "grid-skeleton-2",
+  "grid-skeleton-3",
+  "grid-skeleton-4",
+  "grid-skeleton-5",
+  "grid-skeleton-6",
+  "grid-skeleton-7",
+  "grid-skeleton-8",
+]
 
 export function BookmarkGrid({ refreshKey, folderId }: { refreshKey?: number; folderId?: string }) {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([])
@@ -27,17 +52,28 @@ export function BookmarkGrid({ refreshKey, folderId }: { refreshKey?: number; fo
   const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   const [activeType, setActiveType] = useState("all")
+  const [activePlatform, setActivePlatform] = useState("all")
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
 
   const fetchBookmarks = useCallback(
     async (offset = 0, append = false) => {
-      if (append) setIsLoadingMore(true)
-      else setIsLoading(true)
+      if (append) {
+        setIsLoadingMore(true)
+      } else {
+        setIsLoading(true)
+      }
 
       try {
         const params = new URLSearchParams()
-        if (activeType !== "all") params.set("type", activeType)
-        if (folderId) params.set("folderId", folderId)
+        if (activeType !== "all") {
+          params.set("type", activeType)
+        }
+        if (activePlatform !== "all") {
+          params.set("platform", activePlatform)
+        }
+        if (folderId) {
+          params.set("folderId", folderId)
+        }
         params.set("limit", "20")
         params.set("offset", String(offset))
 
@@ -55,7 +91,7 @@ export function BookmarkGrid({ refreshKey, folderId }: { refreshKey?: number; fo
         setIsLoadingMore(false)
       }
     },
-    [activeType, folderId]
+    [activeType, activePlatform, folderId]
   )
 
   useEffect(() => {
@@ -76,7 +112,9 @@ export function BookmarkGrid({ refreshKey, folderId }: { refreshKey?: number; fo
     <div className="flex flex-col gap-4">
       {/* 筛选栏 */}
       <FilterBar
+        activePlatform={activePlatform}
         activeType={activeType}
+        onPlatformChange={setActivePlatform}
         onTypeChange={setActiveType}
         setViewMode={setViewMode}
         total={total}
@@ -84,11 +122,9 @@ export function BookmarkGrid({ refreshKey, folderId }: { refreshKey?: number; fo
       />
 
       {/* 内容区域 */}
-      {isLoading ? (
-        <LoadingSkeleton viewMode={viewMode} />
-      ) : bookmarks.length === 0 ? (
-        <EmptyState />
-      ) : (
+      {isLoading && <LoadingSkeleton viewMode={viewMode} />}
+      {!isLoading && bookmarks.length === 0 && <EmptyState />}
+      {!isLoading && bookmarks.length > 0 && (
         <>
           <BookmarkList bookmarks={bookmarks} viewMode={viewMode} />
           {hasMore && (
@@ -108,12 +144,16 @@ export function BookmarkGrid({ refreshKey, folderId }: { refreshKey?: number; fo
 function FilterBar({
   activeType,
   onTypeChange,
+  activePlatform,
+  onPlatformChange,
   viewMode,
   setViewMode,
   total,
 }: {
   activeType: string
   onTypeChange: (type: string) => void
+  activePlatform: string
+  onPlatformChange: (platform: string) => void
   viewMode: ViewMode
   setViewMode: (mode: ViewMode) => void
   total: number
@@ -157,6 +197,25 @@ function FilterBar({
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="flex items-center gap-1">
+        {platformFilters.map((filter) => {
+          const config = filter.value !== "all" ? PLATFORM_CONFIG[filter.value] : null
+          const Icon = config?.icon
+          return (
+            <Button
+              className={cn("h-7 text-xs", activePlatform === filter.value && "bg-accent")}
+              key={filter.value}
+              onClick={() => onPlatformChange(filter.value)}
+              size="sm"
+              variant={activePlatform === filter.value ? "secondary" : "ghost"}
+            >
+              {Icon && <Icon className={cn("mr-1 size-3.5", config.color)} />}
+              {filter.label}
+            </Button>
+          )
+        })}
       </div>
     </div>
   )
@@ -233,8 +292,8 @@ function LoadingSkeleton({ viewMode }: { viewMode: ViewMode }) {
   if (viewMode === "list") {
     return (
       <div className="flex flex-col gap-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton className="h-12 w-full rounded-lg" key={i} />
+        {LIST_SKELETON_KEYS.map((key) => (
+          <Skeleton className="h-12 w-full rounded-lg" key={key} />
         ))}
       </div>
     )
@@ -242,8 +301,8 @@ function LoadingSkeleton({ viewMode }: { viewMode: ViewMode }) {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div className="flex flex-col gap-2" key={i}>
+      {GRID_SKELETON_KEYS.map((key) => (
+        <div className="flex flex-col gap-2" key={key}>
           <Skeleton className="aspect-[16/9] w-full rounded-xl" />
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-3 w-1/2" />

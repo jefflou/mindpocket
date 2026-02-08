@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react"
-import { authClient, removeToken } from "../../lib/auth-client"
+import {
+  getCachedUser,
+  getSession,
+  removeCachedUser,
+  setCachedUser,
+  signIn,
+  signOut,
+} from "../../lib/auth-client"
+import { PLATFORM_CONFIG, detectPlatform } from "../../lib/platform-icons"
 import "./App.css"
 
 interface User {
@@ -14,19 +22,30 @@ function App() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    authClient
-      .getSession()
-      .then((res) => {
-        console.log("[MindPocket] getSession:", res)
-        if (res.data?.user) {
-          setUser(res.data.user as User)
-        }
+    getCachedUser().then((cached) => {
+      if (cached) {
+        setUser(cached)
         setChecking(false)
-      })
-      .catch((err) => {
-        console.error("[MindPocket] getSession error:", err)
-        setChecking(false)
-      })
+      }
+
+      getSession()
+        .then((res) => {
+          if (res.ok && res.data?.user) {
+            setUser(res.data.user)
+            setCachedUser(res.data.user)
+          } else {
+            setUser(null)
+            removeCachedUser()
+          }
+        })
+        .catch((err) => {
+          console.error("[MindPocket] getSession error:", err)
+          if (!cached) {
+            setUser(null)
+          }
+        })
+        .finally(() => setChecking(false))
+    })
   }, [])
 
   if (checking) {
@@ -55,14 +74,20 @@ function LoginForm({ onLogin }: { onLogin: (user: User) => void }) {
     setStatus("loading")
     setError("")
 
-    const res = await authClient.signIn.email({ email, password })
-    console.log("[MindPocket] signIn:", res)
-    if (res.data?.user) {
-      setStatus("success")
-      onLogin(res.data.user as User)
-    } else {
+    try {
+      const res = await signIn(email, password)
+      console.log("[MindPocket] signIn res:", JSON.stringify(res, null, 2))
+      if (res.ok && res.data?.user) {
+        setStatus("success")
+        onLogin(res.data.user)
+      } else {
+        setStatus("error")
+        setError(`登录失败 [${res.status}]: ${JSON.stringify(res.data)}`)
+      }
+    } catch (err) {
+      console.error("[MindPocket] signIn catch:", err)
       setStatus("error")
-      setError(res.error?.message || "登录失败，请检查邮箱和密码")
+      setError(`请求异常: ${err}`)
     }
   }
 
@@ -98,6 +123,19 @@ function LoginForm({ onLogin }: { onLogin: (user: User) => void }) {
 function SavePage({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [status, setStatus] = useState<Status>("idle")
   const [message, setMessage] = useState("")
+  const [pageInfo, setPageInfo] = useState<{ url: string; title: string; platform: string | null } | null>(null)
+
+  useEffect(() => {
+    browser.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+      if (tab?.url && tab.title) {
+        setPageInfo({
+          url: tab.url,
+          title: tab.title,
+          platform: detectPlatform(tab.url),
+        })
+      }
+    })
+  }, [])
 
   const handleSave = async () => {
     setStatus("loading")
@@ -120,8 +158,7 @@ function SavePage({ user, onLogout }: { user: User; onLogout: () => void }) {
         <button
           className="logout-btn"
           onClick={async () => {
-            await authClient.signOut()
-            await removeToken()
+            await signOut()
             onLogout()
           }}
           type="button"
@@ -130,6 +167,27 @@ function SavePage({ user, onLogout }: { user: User; onLogout: () => void }) {
         </button>
       </div>
       <p className="user-info">{user.email}</p>
+      {pageInfo && (
+        <div className="page-info">
+          {pageInfo.platform && PLATFORM_CONFIG[pageInfo.platform] ? (
+            (() => {
+              const config = PLATFORM_CONFIG[pageInfo.platform]
+              const Icon = config.icon
+              return (
+                <span className="platform-badge">
+                  <Icon style={{ width: 14, height: 14, color: config.color }} />
+                  <span>{config.label}</span>
+                </span>
+              )
+            })()
+          ) : (
+            <span className="platform-badge">
+              <span>{new URL(pageInfo.url).hostname.replace(/^www\./, "")}</span>
+            </span>
+          )}
+          <p className="page-title">{pageInfo.title}</p>
+        </div>
+      )}
       <button
         className="btn btn-save"
         disabled={status === "loading"}

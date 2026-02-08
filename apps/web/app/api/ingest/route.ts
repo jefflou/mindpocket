@@ -60,6 +60,9 @@ async function handleJsonIngest(request: Request, userId: string) {
         { status: 400 }
       )
     }
+
+    // TODO: AI 自动 folder
+
     const result = await ingestFromExtension({
       userId,
       url: parsed.data.url,
@@ -67,6 +70,7 @@ async function handleJsonIngest(request: Request, userId: string) {
       folderId: parsed.data.folderId,
       title: parsed.data.title,
     })
+    console.log("Ingest from extension result:", result)
     return NextResponse.json(result, { status: 201 })
   }
 

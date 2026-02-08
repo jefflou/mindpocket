@@ -13,11 +13,12 @@ const aliyun = createOpenAICompatible({
 })
 
 const embeddingModel = aliyun.embeddingModel("text-embedding-v4")
+const CHUNK_SPLIT_REGEX = /[。.!\n]+/
 
 export function generateChunks(input: string): string[] {
   return input
     .trim()
-    .split(/[。.!\n]+/)
+    .split(CHUNK_SPLIT_REGEX)
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
 }
@@ -37,7 +38,9 @@ export async function generateEmbeddings(
   content: string
 ): Promise<Array<{ id: string; bookmarkId: string; content: string; embedding: number[] }>> {
   const chunks = generateChunks(content)
-  if (chunks.length === 0) return []
+  if (chunks.length === 0) {
+    return []
+  }
 
   const allEmbeddings: number[][] = []
 

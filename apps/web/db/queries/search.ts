@@ -12,13 +12,13 @@ const MAX_INTERNAL_CANDIDATES = 50
 const MIN_SEMANTIC_QUERY_LENGTH = 2
 const RRF_K = 60
 
-type SearchHit = {
+interface SearchHit {
   bookmarkId: string
   score: number
   matchReasons: SearchMatchReason[]
 }
 
-type BookmarkLookupRow = {
+interface BookmarkLookupRow {
   id: string
   type: string
   title: string
@@ -33,7 +33,7 @@ type BookmarkLookupRow = {
   platform: string | null
 }
 
-export type SearchResultItem = {
+export interface SearchResultItem {
   id: string
   type: string
   title: string
@@ -54,11 +54,12 @@ export async function searchBookmarks({
   userId,
   q,
   mode,
-  scope,
+  scope: _scope,
   limit = 20,
   offset = 0,
   folderId,
   type,
+  platform,
 }: {
   userId: string
   q: string
@@ -68,6 +69,7 @@ export async function searchBookmarks({
   offset?: number
   folderId?: string
   type?: string
+  platform?: string
 }): Promise<{
   items: SearchResultItem[]
   modeUsed: SearchMode
@@ -75,7 +77,6 @@ export async function searchBookmarks({
   total: number
   hasMore: boolean
 }> {
-  void scope
   const query = q.trim()
   if (!query) {
     const modeUsed = parseSearchMode(mode, "hybrid")
@@ -100,30 +101,58 @@ export async function searchBookmarks({
   let hits: SearchHit[] = []
 
   if (modeUsed === "keyword") {
-    hits = await keywordSearch({ userId, q: query, folderId, type, limit: candidateLimit })
+    hits = await keywordSearch({
+      userId,
+      q: query,
+      folderId,
+      type,
+      platform,
+      limit: candidateLimit,
+    })
   }
 
   if (modeUsed === "semantic") {
     try {
-      hits = await semanticSearch({ userId, q: query, folderId, type, limit: candidateLimit })
+      hits = await semanticSearch({
+        userId,
+        q: query,
+        folderId,
+        type,
+        platform,
+        limit: candidateLimit,
+      })
     } catch {
       modeUsed = "keyword"
       fallbackReason = "semantic_failed_fallback_to_keyword"
-      hits = await keywordSearch({ userId, q: query, folderId, type, limit: candidateLimit })
+      hits = await keywordSearch({
+        userId,
+        q: query,
+        folderId,
+        type,
+        platform,
+        limit: candidateLimit,
+      })
     }
   }
 
   if (modeUsed === "hybrid") {
     try {
       const [keywordHits, semanticHits] = await Promise.all([
-        keywordSearch({ userId, q: query, folderId, type, limit: candidateLimit }),
-        semanticSearch({ userId, q: query, folderId, type, limit: candidateLimit }),
+        keywordSearch({ userId, q: query, folderId, type, platform, limit: candidateLimit }),
+        semanticSearch({ userId, q: query, folderId, type, platform, limit: candidateLimit }),
       ])
       hits = fuseRrf([keywordHits, semanticHits], candidateLimit)
     } catch {
       modeUsed = "keyword"
       fallbackReason = "semantic_failed_fallback_to_keyword"
-      hits = await keywordSearch({ userId, q: query, folderId, type, limit: candidateLimit })
+      hits = await keywordSearch({
+        userId,
+        q: query,
+        folderId,
+        type,
+        platform,
+        limit: candidateLimit,
+      })
     }
   }
 
@@ -138,7 +167,9 @@ export async function searchBookmarks({
   const items = slicedHits
     .map((hit) => {
       const detail = itemMap.get(hit.bookmarkId)
-      if (!detail) return null
+      if (!detail) {
+        return null
+      }
       return {
         ...detail,
         score: hit.score,
@@ -161,12 +192,14 @@ async function keywordSearch({
   q,
   folderId,
   type,
+  platform,
   limit,
 }: {
   userId: string
   q: string
   folderId?: string
   type?: string
+  platform?: string
   limit: number
 }): Promise<SearchHit[]> {
   const likePattern = `%${q}%`
@@ -179,7 +212,7 @@ async function keywordSearch({
     ilike(bookmark.url, likePattern)
   )
 
-  const baseConditions = buildBookmarkFilters({ userId, folderId, type })
+  const baseConditions = buildBookmarkFilters({ userId, folderId, type, platform })
 
   const contentRows = await db
     .select({
@@ -215,7 +248,9 @@ async function keywordSearch({
 
   for (const row of contentRows) {
     const reasons = inferKeywordReasons(row, queryLower)
-    if (reasons.length === 0) continue
+    if (reasons.length === 0) {
+      continue
+    }
 
     const score = computeKeywordScore(reasons)
     hitMap.set(row.id, {
@@ -242,7 +277,9 @@ async function keywordSearch({
   return Array.from(hitMap.entries())
     .sort((a, b) => {
       const scoreDiff = b[1].score - a[1].score
-      if (scoreDiff !== 0) return scoreDiff
+      if (scoreDiff !== 0) {
+        return scoreDiff
+      }
       return b[1].createdAt - a[1].createdAt
     })
     .slice(0, limit)
@@ -258,19 +295,24 @@ async function semanticSearch({
   q,
   folderId,
   type,
+  platform,
   limit,
 }: {
   userId: string
   q: string
   folderId?: string
   type?: string
+  platform?: string
   limit: number
 }): Promise<SearchHit[]> {
   const queryEmbedding = await generateEmbedding(q)
   const similarity = sql<number>`1 - (${cosineDistance(embedding.embedding, queryEmbedding)})`
   const scoreExpr = sql<number>`max(${similarity})`
 
-  const filters: SQL[] = [...buildBookmarkFilters({ userId, folderId, type }), gt(similarity, 0.3)]
+  const filters: SQL[] = [
+    ...buildBookmarkFilters({ userId, folderId, type, platform }),
+    gt(similarity, 0.3),
+  ]
 
   const rows = await db
     .select({
@@ -295,20 +337,22 @@ function fuseRrf(hitLists: SearchHit[][], limit: number): SearchHit[] {
   const map = new Map<string, { score: number; reasons: Set<SearchMatchReason> }>()
 
   for (const hits of hitLists) {
-    hits.forEach((hit, index) => {
+    for (const [index, hit] of hits.entries()) {
       const rank = index + 1
       const rrfScore = 1 / (RRF_K + rank)
       const prev = map.get(hit.bookmarkId)
       if (prev) {
         prev.score += rrfScore
-        hit.matchReasons.forEach((reason) => prev.reasons.add(reason))
-        return
+        for (const reason of hit.matchReasons) {
+          prev.reasons.add(reason)
+        }
+        continue
       }
       map.set(hit.bookmarkId, {
         score: rrfScore,
         reasons: new Set<SearchMatchReason>(hit.matchReasons),
       })
-    })
+    }
   }
 
   return Array.from(map.entries())
@@ -325,10 +369,12 @@ function buildBookmarkFilters({
   userId,
   folderId,
   type,
+  platform,
 }: {
   userId: string
   folderId?: string
   type?: string
+  platform?: string
 }): SQL[] {
   const filters: SQL[] = [eq(bookmark.userId, userId), eq(bookmark.isArchived, false)]
 
@@ -338,6 +384,10 @@ function buildBookmarkFilters({
 
   if (type && type !== "all") {
     filters.push(eq(bookmark.type, type))
+  }
+
+  if (platform && platform !== "all") {
+    filters.push(eq(bookmark.platform, platform))
   }
 
   return filters
@@ -350,7 +400,9 @@ async function getBookmarkDetailsByIds({
   bookmarkIds: string[]
   userId: string
 }): Promise<BookmarkLookupRow[]> {
-  if (bookmarkIds.length === 0) return []
+  if (bookmarkIds.length === 0) {
+    return []
+  }
 
   const rows = await db
     .select({
@@ -386,10 +438,18 @@ function inferKeywordReasons(
 ): SearchMatchReason[] {
   const reasons: SearchMatchReason[] = []
 
-  if (row.title.toLowerCase().includes(queryLower)) reasons.push("title")
-  if (row.description?.toLowerCase().includes(queryLower)) reasons.push("description")
-  if (row.content?.toLowerCase().includes(queryLower)) reasons.push("content")
-  if (row.url?.toLowerCase().includes(queryLower)) reasons.push("url")
+  if (row.title.toLowerCase().includes(queryLower)) {
+    reasons.push("title")
+  }
+  if (row.description?.toLowerCase().includes(queryLower)) {
+    reasons.push("description")
+  }
+  if (row.content?.toLowerCase().includes(queryLower)) {
+    reasons.push("content")
+  }
+  if (row.url?.toLowerCase().includes(queryLower)) {
+    reasons.push("url")
+  }
 
   return reasons
 }
@@ -397,11 +457,21 @@ function inferKeywordReasons(
 function computeKeywordScore(reasons: SearchMatchReason[]): number {
   let score = 0
 
-  if (reasons.includes("title")) score += 5
-  if (reasons.includes("description")) score += 3
-  if (reasons.includes("content")) score += 2
-  if (reasons.includes("url")) score += 1
-  if (reasons.includes("tag")) score += 4
+  if (reasons.includes("title")) {
+    score += 5
+  }
+  if (reasons.includes("description")) {
+    score += 3
+  }
+  if (reasons.includes("content")) {
+    score += 2
+  }
+  if (reasons.includes("url")) {
+    score += 1
+  }
+  if (reasons.includes("tag")) {
+    score += 4
+  }
 
   return score
 }

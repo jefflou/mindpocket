@@ -54,8 +54,12 @@ interface IngestDialogProps {
 type IngestState = "idle" | "processing" | "success" | "error"
 
 function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024) {
+    return `${bytes} B`
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`
+  }
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
@@ -81,7 +85,9 @@ export function IngestDialog({ folders = [], onSuccess, trigger }: IngestDialogP
   }, [])
 
   const handleUrlSubmit = useCallback(async () => {
-    if (!url.trim()) return
+    if (!url.trim()) {
+      return
+    }
     setState("processing")
     setError(null)
 
@@ -119,15 +125,21 @@ export function IngestDialog({ folders = [], onSuccess, trigger }: IngestDialogP
   }, [url, folderId, title, onSuccess, reset])
 
   const handleFileSubmit = useCallback(async () => {
-    if (!selectedFile) return
+    if (!selectedFile) {
+      return
+    }
     setState("processing")
     setError(null)
 
     try {
       const formData = new FormData()
       formData.append("file", selectedFile)
-      if (folderId) formData.append("folderId", folderId)
-      if (title.trim()) formData.append("title", title.trim())
+      if (folderId) {
+        formData.append("folderId", folderId)
+      }
+      if (title.trim()) {
+        formData.append("title", title.trim())
+      }
 
       const res = await fetch("/api/ingest", {
         method: "POST",
@@ -159,7 +171,9 @@ export function IngestDialog({ folders = [], onSuccess, trigger }: IngestDialogP
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
-    if (file) setSelectedFile(file)
+    if (file) {
+      setSelectedFile(file)
+    }
   }, [])
 
   const isProcessing = state === "processing"
@@ -168,7 +182,9 @@ export function IngestDialog({ folders = [], onSuccess, trigger }: IngestDialogP
     <Dialog
       onOpenChange={(v) => {
         setOpen(v)
-        if (!v) reset()
+        if (!v) {
+          reset()
+        }
       }}
       open={open}
     >
@@ -258,6 +274,17 @@ export function IngestDialog({ folders = [], onSuccess, trigger }: IngestDialogP
               onClick={() => !isProcessing && fileInputRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
+              onKeyDown={(e) => {
+                if (isProcessing) {
+                  return
+                }
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  fileInputRef.current?.click()
+                }
+              }}
+              role="button"
+              tabIndex={isProcessing ? -1 : 0}
             >
               <input
                 accept={ACCEPT_TYPES}
@@ -331,7 +358,9 @@ function FolderSelect({
   onFolderChange: (v: string) => void
   disabled: boolean
 }) {
-  if (folders.length === 0) return null
+  if (folders.length === 0) {
+    return null
+  }
 
   return (
     <div className="space-y-2">

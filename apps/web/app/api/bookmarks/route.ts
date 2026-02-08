@@ -12,6 +12,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url)
   const type = searchParams.get("type") || undefined
+  const platform = searchParams.get("platform") || undefined
   const folderId = searchParams.get("folderId") || undefined
   const search = searchParams.get("search") || undefined
   const searchMode = parseSearchMode(searchParams.get("searchMode"), "keyword")
@@ -27,6 +28,7 @@ export async function GET(request: Request) {
       scope: searchScope,
       folderId,
       type,
+      platform,
       limit,
       offset,
     })
@@ -56,6 +58,7 @@ export async function GET(request: Request) {
   const result = await getBookmarksByUserId({
     userId: session.user.id,
     type,
+    platform,
     folderId,
     search,
     limit,

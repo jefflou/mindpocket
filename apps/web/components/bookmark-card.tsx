@@ -1,6 +1,15 @@
 "use client"
 
-import { ExternalLink, FileText, Heart, Image, Link2, MoreHorizontal, Video } from "lucide-react"
+import {
+  ExternalLink,
+  FileText,
+  Heart,
+  Image as ImageIcon,
+  Link2,
+  MoreHorizontal,
+  Video,
+} from "lucide-react"
+import NextImage from "next/image"
 import Link from "next/link"
 import { hasPlatformIcon, PlatformIcon } from "@/components/icons/platform-icons"
 import { Button } from "@/components/ui/button"
@@ -31,11 +40,13 @@ const typeIcons: Record<string, typeof Link2> = {
   link: Link2,
   article: FileText,
   video: Video,
-  image: Image,
+  image: ImageIcon,
 }
 
 function getDomain(url: string | null) {
-  if (!url) return null
+  if (!url) {
+    return null
+  }
   try {
     return new URL(url).hostname.replace("www.", "")
   } catch {
@@ -53,16 +64,28 @@ function getRelativeTime(dateStr: string) {
   const weeks = Math.floor(days / 7)
   const months = Math.floor(days / 30)
 
-  if (minutes < 1) return "刚刚"
-  if (minutes < 60) return `${minutes}分钟前`
-  if (hours < 24) return `${hours}小时前`
-  if (days < 7) return `${days}天前`
-  if (weeks < 5) return `${weeks}周前`
+  if (minutes < 1) {
+    return "刚刚"
+  }
+  if (minutes < 60) {
+    return `${minutes}分钟前`
+  }
+  if (hours < 24) {
+    return `${hours}小时前`
+  }
+  if (days < 7) {
+    return `${days}天前`
+  }
+  if (weeks < 5) {
+    return `${weeks}周前`
+  }
   return `${months}个月前`
 }
 
 function getGradientFromUrl(url: string | null) {
-  if (!url) return "from-blue-500/20 to-purple-500/20"
+  if (!url) {
+    return "from-blue-500/20 to-purple-500/20"
+  }
   const hash = url.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
   const gradients = [
     "from-blue-500/20 to-purple-500/20",
@@ -91,9 +114,11 @@ export function BookmarkCard({ item }: { item: BookmarkItem }) {
       {/* 封面图 */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
         {item.coverImage ? (
-          <img
+          <NextImage
             alt={item.title}
             className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             src={item.coverImage}
           />
         ) : (

@@ -60,9 +60,20 @@
           }
         }
       }
+    },
+    {
+      "includes": ["apps/extension/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
+          }
+        }
+      }
     }
   ],
   "javascript": {
+    "globals": ["browser", "chrome", "defineBackground", "defineContentScript"],
     "formatter": {
       "quoteStyle": "double",
       "semicolons": "asNeeded"
