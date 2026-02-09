@@ -1,5 +1,7 @@
-"use client";
+"use client"
 
+import { CheckIcon } from "lucide-react"
+import { memo, useCallback, useState } from "react"
 import {
   ModelSelector,
   ModelSelectorContent,
@@ -12,10 +14,8 @@ import {
   ModelSelectorLogoGroup,
   ModelSelectorName,
   ModelSelectorTrigger,
-} from "@/components/ai-elements/model-selector";
-import { Button } from "@/components/ui/button";
-import { CheckIcon } from "lucide-react";
-import { memo, useCallback, useState } from "react";
+} from "@/components/ai-elements/model-selector"
+import { Button } from "@/components/ui/button"
 
 const models = [
   {
@@ -28,7 +28,7 @@ const models = [
   {
     chef: "OpenAI",
     chefSlug: "openai",
-    id: "gpt-4o-mini",
+    id: "deepseek-v3.2",
     name: "GPT-4o Mini",
     providers: ["openai", "azure"],
   },
@@ -277,19 +277,16 @@ const models = [
     name: "Nova Micro",
     providers: ["amazon-bedrock"],
   },
-];
+]
 
 interface ModelItemProps {
-  model: (typeof models)[0];
-  selectedModel: string;
-  onSelect: (id: string) => void;
+  model: (typeof models)[0]
+  selectedModel: string
+  onSelect: (id: string) => void
 }
 
 const ModelItem = memo(({ model, selectedModel, onSelect }: ModelItemProps) => {
-  const handleSelect = useCallback(
-    () => onSelect(model.id),
-    [onSelect, model.id]
-  );
+  const handleSelect = useCallback(() => onSelect(model.id), [onSelect, model.id])
   return (
     <ModelSelectorItem key={model.id} onSelect={handleSelect} value={model.id}>
       <ModelSelectorLogo provider={model.chefSlug} />
@@ -305,24 +302,24 @@ const ModelItem = memo(({ model, selectedModel, onSelect }: ModelItemProps) => {
         <div className="ml-auto size-4" />
       )}
     </ModelSelectorItem>
-  );
-});
+  )
+})
 
-ModelItem.displayName = "ModelItem";
+ModelItem.displayName = "ModelItem"
 
 const Example = () => {
-  const [open, setOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>("gpt-4o");
+  const [open, setOpen] = useState(false)
+  const [selectedModel, setSelectedModel] = useState<string>("gpt-4o")
 
   const handleModelSelect = useCallback((id: string) => {
-    setSelectedModel(id);
-    setOpen(false);
-  }, []);
+    setSelectedModel(id)
+    setOpen(false)
+  }, [])
 
-  const selectedModelData = models.find((model) => model.id === selectedModel);
+  const selectedModelData = models.find((model) => model.id === selectedModel)
 
   // Get unique chefs in order of appearance
-  const chefs = [...new Set(models.map((model) => model.chef))];
+  const chefs = [...new Set(models.map((model) => model.chef))]
 
   return (
     <div className="flex size-full items-center justify-center p-8">
@@ -359,6 +356,11 @@ const Example = () => {
         </ModelSelectorContent>
       </ModelSelector>
     </div>
+  )
+}
+
+export default Example
+>
   );
 };
 

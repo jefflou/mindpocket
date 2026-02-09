@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL = "openai/gpt-4o-mini"
+export const DEFAULT_CHAT_MODEL = "deepseek/deepseek-v3.2"
 
 export interface ChatModel {
   id: string
@@ -9,7 +9,7 @@ export interface ChatModel {
 
 export const chatModels: ChatModel[] = [
   {
-    id: "openai/gpt-4o-mini",
+    id: "deepseek/deepseek-v3.2",
     name: "GPT-4o Mini",
     provider: "openai",
     description: "快速且经济，适合日常任务",

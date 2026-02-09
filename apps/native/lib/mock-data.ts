@@ -31,7 +31,7 @@ export const mockTrendingTopics = [
 
 export const chatModels = [
   {
-    id: "openai/gpt-4o-mini",
+    id: "deepseek/deepseek-v3.2",
     name: "GPT-4o Mini",
     description: "快速且经济",
   },

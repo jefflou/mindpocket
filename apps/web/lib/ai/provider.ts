@@ -8,5 +8,5 @@ export function getChatModel(modelId?: string) {
 }
 
 export function getTitleModel() {
-  return gateway("openai/gpt-4o-mini")
+  return gateway("deepseek/deepseek-v3.2")
 }

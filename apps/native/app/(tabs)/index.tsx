@@ -14,7 +14,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedModel, setSelectedModel] = useState("openai/gpt-4o-mini")
+  const [selectedModel, setSelectedModel] = useState("deepseek/deepseek-v3.2")
   const [historySections, setHistorySections] = useState<HistorySection[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState<string>()

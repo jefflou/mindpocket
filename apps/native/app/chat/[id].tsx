@@ -42,7 +42,7 @@ function ChatSession({
     }),
     experimental_throttle: 50,
     chatRequestBody: {
-      selectedChatModel: selectedModel || "openai/gpt-4o-mini",
+      selectedChatModel: selectedModel || "deepseek/deepseek-v3.2",
     },
     onError: (err) => {
       Alert.alert("发送失败", err.message || "请稍后重试")

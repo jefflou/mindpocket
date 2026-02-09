@@ -135,7 +135,7 @@ export async function POST(req: Request) {
               getInformation: tool({
                 description:
                   "从用户的书签知识库中检索相关信息来回答问题。当用户提问时，优先使用此工具搜索知识库。",
-                parameters: z.object({
+                inputSchema: z.object({
                   question: z.string().describe("用于搜索知识库的查询语句"),
                 }),
                 execute: async ({ question }) => findRelevantContent(userId, question),
@@ -173,10 +173,6 @@ export async function POST(req: Request) {
         if (textPart && "text" in textPart) {
           generateTitleFromUserMessage({ message: textPart.text }).then(async (title) => {
             await updateChatTitle({ chatId: id, title })
-            writer.write({
-              type: "data",
-              data: [{ type: "title", content: title }],
-            })
           })
         }
       }
