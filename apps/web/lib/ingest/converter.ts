@@ -4,6 +4,7 @@ import { EXTENSION_TYPE_MAP, URL_TYPE_PATTERNS } from "./types"
 
 let markitdownInstance: MarkItDown | null = null
 const PARAGRAPH_SPLIT_REGEX = /\n\n/
+const BROWSER_ONLY_PATTERNS = [/^https?:\/\/mp\.weixin\.qq\.com\//]
 
 function getMarkItDown(): MarkItDown {
   if (!markitdownInstance) {
@@ -12,13 +13,33 @@ function getMarkItDown(): MarkItDown {
   return markitdownInstance
 }
 
-export async function convertUrl(url: string) {
-  const md = getMarkItDown()
-  const result = await md.convert(url)
-  if (!result) {
+async function convertUrlWithBrowser(url: string) {
+  const { fetchWithBrowser } = await import("./browser")
+  const html = await fetchWithBrowser(url)
+  if (!html) {
     return null
   }
-  return { title: result.title, markdown: result.markdown }
+  return convertHtml(html, url)
+}
+
+export async function convertUrl(url: string) {
+  // Sites that require browser rendering — skip markitdown entirely
+  if (BROWSER_ONLY_PATTERNS.some((p) => p.test(url))) {
+    return convertUrlWithBrowser(url)
+  }
+
+  const md = getMarkItDown()
+
+  try {
+    const result = await md.convert(url)
+    if (result?.markdown) {
+      return { title: result.title, markdown: result.markdown }
+    }
+  } catch (error) {
+    console.warn("[converter] markitdown failed, trying browser fallback:", error)
+  }
+
+  return convertUrlWithBrowser(url)
 }
 
 export async function convertBuffer(buffer: Buffer, fileExtension: string) {

@@ -1,6 +1,6 @@
 module.exports = {
   reactStrictMode: true,
-  serverExternalPackages: ["pdf-parse", "pdfjs-dist"],
+  serverExternalPackages: ["pdf-parse", "pdfjs-dist", "@sparticuz/chromium"],
   turbopack: {
     resolveAlias: {
       "react-native": "react-native-web",
