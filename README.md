@@ -43,6 +43,7 @@ This is a pure **VIBE CODING** project:
 - I only implemented one core feature, the rest was built by Claude Code
 - **26,256 lines** of pure code, see [Code Insight](./docs/codeinsight.md)
 - VIBE Coding experience summary: [Development Experience](./docs/experience.md)
+- VIBE Coding write-up (CN): [How I VIBE CODED this project](./docs/vibe-coding.md)
 - VIBE Coding PRs are welcome!!!
 
 ## 🚀 Quick Deploy

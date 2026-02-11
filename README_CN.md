@@ -43,6 +43,7 @@ MindPocket 将你的收藏内容进行分类存储，并通过 AI Agent 进行 R
 - 我只实现了一个核心功能，其余功能基本全部由 Claude Code 实现
 - 纯代码 **26,256 行**，详细见 [代码洞察](./docs/codeinsight.md)
 - VIBE Coding 经验总结见 [开发经验](./docs/experience.md)
+- VIBE Coding 实战复盘见 [我如何用 AI 把项目从 0 做到可用](./docs/vibe-coding.md)
 - 欢迎 VIBE Coding PR！！！
 
 欢迎交流 VIBE Coding 经验！
