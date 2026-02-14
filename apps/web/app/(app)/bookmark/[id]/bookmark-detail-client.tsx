@@ -17,7 +17,6 @@ import {
 } from "lucide-react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
-import { useTheme } from "next-themes"
 import { useCallback, useState } from "react"
 import { hasPlatformIcon, PlatformIcon } from "@/components/icons/platform-icons"
 import { Badge } from "@/components/ui/badge"
@@ -63,7 +62,6 @@ interface BookmarkDetail {
 }
 
 export function BookmarkDetailClient({ bookmark }: { bookmark: BookmarkDetail }) {
-  const { theme } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
   const [content, setContent] = useState(bookmark.content ?? "")
   const [isSaving, setIsSaving] = useState(false)
@@ -86,7 +84,7 @@ export function BookmarkDetailClient({ bookmark }: { bookmark: BookmarkDetail })
 
   return (
     <SidebarInset className="flex h-dvh flex-col overflow-hidden">
-      <div className="flex h-full flex-col" data-color-mode={theme === "dark" ? "dark" : "light"}>
+      <div className="flex h-full flex-col">
         <Header
           bookmark={bookmark}
           isEditing={isEditing}
