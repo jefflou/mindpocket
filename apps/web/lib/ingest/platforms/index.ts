@@ -2,6 +2,7 @@ import { convertHtml } from "../converter"
 import { convertBilibili } from "./bilibili"
 import { convertWechat } from "./wechat"
 import { convertXiaohongshu } from "./xiaohongshu"
+import type { BilibiliCredentials } from "@/db/queries/bilibili-credentials"
 
 export interface ConvertResult {
   title: string | null
@@ -23,11 +24,12 @@ export function needsBrowser(platform: string | null): boolean {
  */
 export async function convertWithoutHtml(
   url: string,
-  platform: string
+  platform: string,
+  credentials?: BilibiliCredentials | null
 ): Promise<ConvertResult | null> {
   switch (platform) {
     case "bilibili":
-      return await convertBilibili(url)
+      return await convertBilibili(url, credentials)
     default:
       return null
   }

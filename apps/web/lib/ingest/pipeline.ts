@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { db } from "@/db/client"
 import { getDefaultProvider } from "@/db/queries/ai-provider"
+import { getBilibiliCredentials } from "@/db/queries/bilibili-credentials"
 import { bookmark } from "@/db/schema/bookmark"
 import { embedding as embeddingTable } from "@/db/schema/embedding"
 import { generateEmbeddings } from "@/lib/ai/embedding"
@@ -116,7 +117,9 @@ async function processIngestUrl(
         }
       } else {
         // 不需要浏览器的平台，直接从 URL 解析
-        result = await convertWithoutHtml(url, platform)
+        // 对于 bilibili，尝试获取用户凭证
+        const credentials = platform === "bilibili" ? await getBilibiliCredentials(userId) : null
+        result = await convertWithoutHtml(url, platform, credentials)
       }
     }
 
@@ -255,7 +258,9 @@ async function processIngestExtension(
     let result = null
 
     if (platform && !needsBrowser(platform)) {
-      result = await convertWithoutHtml(url, platform)
+      // 对于 bilibili，尝试获取用户凭证
+      const credentials = platform === "bilibili" ? await getBilibiliCredentials(userId) : null
+      result = await convertWithoutHtml(url, platform, credentials)
     }
 
     if (!result) {

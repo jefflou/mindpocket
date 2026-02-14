@@ -1,5 +1,6 @@
 export * from "./ai-provider"
 export * from "./auth"
+export * from "./bilibili-credentials"
 export * from "./bookmark"
 export * from "./chat"
 export * from "./embedding"

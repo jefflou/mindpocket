@@ -1,10 +1,11 @@
 "use client"
 
-import { Bot, FileText, Globe, Palette, User } from "lucide-react"
+import { Bot, FileText, Globe, Palette, User, Video } from "lucide-react"
 import { useState } from "react"
 import { SettingsAccount } from "@/components/settings/settings-account"
 import { SettingsAiModel } from "@/components/settings/settings-ai-model"
 import { SettingsAppearance } from "@/components/settings/settings-appearance"
+import { SettingsBilibili } from "@/components/settings/settings-bilibili"
 import { SettingsFileParsing } from "@/components/settings/settings-file-parsing"
 import { SettingsLanguage } from "@/components/settings/settings-language"
 import {
@@ -17,7 +18,7 @@ import {
 import { useT } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
-type SettingsTab = "account" | "appearance" | "language" | "ai-model" | "file-parsing"
+type SettingsTab = "account" | "appearance" | "language" | "ai-model" | "file-parsing" | "bilibili"
 
 interface SettingsDialogProps {
   open: boolean
@@ -37,6 +38,7 @@ export function SettingsDialog({ open, onOpenChange, user }: SettingsDialogProps
     { value: "account" as const, label: t.settings.account, icon: User },
     { value: "ai-model" as const, label: t.settings.aiModel, icon: Bot },
     { value: "file-parsing" as const, label: t.settings.fileParsing, icon: FileText },
+    { value: "bilibili" as const, label: "Bilibili", icon: Video },
     { value: "appearance" as const, label: t.settings.appearance, icon: Palette },
     { value: "language" as const, label: t.settings.language, icon: Globe },
   ]
@@ -72,6 +74,7 @@ export function SettingsDialog({ open, onOpenChange, user }: SettingsDialogProps
             {activeTab === "account" && <SettingsAccount user={user} />}
             {activeTab === "ai-model" && <SettingsAiModel />}
             {activeTab === "file-parsing" && <SettingsFileParsing />}
+            {activeTab === "bilibili" && <SettingsBilibili />}
             {activeTab === "appearance" && <SettingsAppearance />}
             {activeTab === "language" && <SettingsLanguage />}
           </div>

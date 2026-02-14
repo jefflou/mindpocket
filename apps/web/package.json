@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "tsx scripts/ensure-extensions.ts && drizzle-kit push --force && next build",
+    "build-without-db": "next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
