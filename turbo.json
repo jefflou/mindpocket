@@ -6,7 +6,7 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
-      "env": ["DATABASE_URL"]  // <--- 关键：在这里声明变量
+      "env": ["DATABASE_URL", "BETTER_AUTH_SECRET"]  // <--- 关键：在这里声明变量
     },
     "dev": {
       "cache": false,
